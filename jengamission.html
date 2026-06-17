@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>100面サイコロ お題</title>
+<style>
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
+  background:
+    radial-gradient(circle at top, #333 0%, #111 45%, #000 100%);
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+.container {
+  width: 100%;
+  max-width: 850px;
+  background: rgba(18,18,18,0.92);
+  border: 1px solid #444;
+  border-radius: 28px;
+  padding: 28px;
+  text-align: center;
+  box-shadow: 0 0 35px rgba(255,255,255,0.08);
+}
+h1 {
+  margin: 0 0 8px;
+  font-size: clamp(28px, 5vw, 48px);
+  letter-spacing: 2px;
+}
+.sub {
+  color: #bbb;
+  margin-bottom: 25px;
+}
+.dice {
+  width: 180px;
+  height: 180px;
+  margin: 0 auto 22px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #050505, #2b2b2b);
+  border: 4px solid #777;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 72px;
+  font-weight: bold;
+  box-shadow:
+    inset 0 0 25px rgba(255,255,255,0.08),
+    0 0 25px rgba(255,255,255,0.16);
+}
+.rolling {
+  animation: shake 0.55s ease;
+}
+@keyframes shake {
+  0% { transform: rotate(0deg) scale(1); }
+  20% { transform: rotate(12deg) scale(1.06); }
+  40% { transform: rotate(-12deg) scale(1.06); }
+  60% { transform: rotate(10deg) scale(1.04); }
+  80% { transform: rotate(-8deg) scale(1.03); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+button {
+  font-size: 22px;
+  font-weight: bold;
+  color: #fff;
+  background: #000;
+  border: 2px solid #888;
+  border-radius: 999px;
+  padding: 15px 42px;
+  cursor: pointer;
+  transition: 0.2s;
+  box-shadow: 0 0 18px rgba(255,255,255,0.08);
+}
+button:hover {
+  background: #222;
+  transform: translateY(-2px);
+}
+.topic-box {
+  margin-top: 26px;
+  background: #080808;
+  border: 1px solid #555;
+  border-radius: 20px;
+  padding: 22px;
+}
+.label {
+  color: #aaa;
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+#topic {
+  font-size: clamp(22px, 4vw, 34px);
+  line-height: 1.55;
+  font-weight: bold;
+}
+.history {
+  margin-top: 22px;
+  color: #aaa;
+  font-size: 14px;
+  line-height: 1.7;
+}
+@media (max-width: 500px) {
+  .container {
+    padding: 22px 16px;
+  }
+  .dice {
+    width: 145px;
+    height: 145px;
+    font-size: 58px;
+  }
+  button {
+    width: 100%;
+  }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🎲 100面サイコロ</h1>
+  <div class="sub">ボタンを押すと、数字とお題が出ます</div>
+
+  <div id="dice" class="dice">?</div>
+  <button onclick="rollDice()">サイコロを振る</button>
+
+  <div class="topic-box">
+    <div class="label">お題</div>
+    <div id="topic">ここにお題が表示されます</div>
+  </div>
+
+  <div class="history" id="history">履歴：まだありません</div>
+</div>
+
+<script>
+const topics = [
+  "下の名前（またはあだ名）の由来は？",
+  "今、一番ハマっている食べ物は？",
+  "出身地の「実はここがすごい」ところは？",
+  "子供の頃の夢は何だった？",
+  "自分の性格を一言で表すと？",
+  "最近買った「ちょっと良いもの」は？",
+  "インドア派？アウトドア派？",
+  "朝型？夜型？",
+  "好きな動物を1つ挙げて！",
+  "得意料理（または好きな惣菜）は？",
+  "最近見た映画やアニメで面白かったのは？",
+  "宝くじで100万円当たったら何に使う？",
+  "今自分がハマっているなにかは？",
+  "好きな色は？",
+  "好きな季節とその理由は？",
+  "カフェでつい頼んでしまう飲み物は？",
+  "コンビニに行くと必ずチェックする棚は？",
+  "趣味は何？",
+  "苦手な食べ物、実はこれなんです。",
+  "N中に来た理由は？",
+  "タイムマシンがあったら過去？未来？",
+  "よく食べるものは？",
+  "理想の休日の過ごし方は？",
+  "好きな言葉（座右の銘）はある？",
+  "推しはいる？いたら誰？",
+  "N中でやりたいことは？",
+  "今までで一番緊張した瞬間は？",
+  "幽霊や宇宙人を信じる？",
+  "人生で一番影響を受けた本や漫画は？",
+  "憧れの職業は何？",
+  "一日だけ有名人になれるなら誰になりたい？",
+  "寝る前のルーティンはある？",
+  "好きな音楽のジャンルは？",
+  "今すぐ旅行に行けるならどこ？",
+  "自分の「小さなこだわり」を教えて。",
+  "これだけは譲れない！というマナーは？",
+  "犬派？猫派？それとも？",
+  "旅行に行くなら、計画派？行き当たりばったり派？",
+  "もし魔法が1つだけ使えるなら？",
+  "最近、感動して泣いたことは？",
+  "最近あった「ちょっとしたラッキー」は？",
+  "今までで一番遠くに行った場所はどこ？",
+  "透明人間になれたら何をする？",
+  "一番好きだった給食のメニューは？",
+  "最近笑った出来事を教えて！",
+  "子供の頃の失敗談を1つ。",
+  "1ヶ月休みがあったらどこで何をしたい？",
+  "自分の名前以外で呼ばれたい名前はある？",
+  "動物になるなら何になりたい？",
+  "最近、勇気を出して挑戦したことは？",
+  "今覚えたい・挑戦したい特技は？",
+  "30秒間、全力で自分を自慢する。",
+  "運命を感じた出来事はある？",
+  "最近あった嬉しい出来事を話す。",
+  "「これをしてる時が一番幸せ！」な瞬間は？",
+  "自分の部屋の自慢ポイントは？",
+  "地味に自信があることは？",
+  "これまでで一番高い買い物は何？",
+  "どんな子供だったって言われる？",
+  "無人島に1つだけ持っていくなら何？",
+  "明日突然休みになったら何をする？",
+  "最近やってみたいと思っていることは？",
+  "自分の意外な一面を教えて！",
+  "自分にキャッチコピーをつけてみて！",
+  "昔、何になりたかった？",
+  "「りんご」から始めて一周させる。",
+  "宇宙旅行に行けるなら行きたい？",
+  "「自分、大人になったな」と思う瞬間は？",
+  "宝物はどこにしまってある？",
+  "明日が地球最後の日なら、最後に何を食べる？",
+  "好きな音（雨の音、焚き火など）はある？",
+  "カラオケの十八番（または好きな曲）は？",
+  "最近気になっているもの・ことは？",
+  "生まれ変わるなら何なりたい？",
+  "「生麦生米生卵」を3回噛まずに言う。",
+  "今の気分を色で表すと？",
+  "超能力を1つ選べるなら何が欲しい？",
+  "スマホの待ち受け画面は何？",
+  "最近、人に褒められて嬉しかったことは？",
+  "自分の強みを3つ教えて！",
+  "一番好きなゲームは？",
+  "朝起きたら別人になっていたらどうする？",
+  "今まででもらって一番嬉しかったプレゼントは？",
+  "無人島で1週間生活できる自信はある？",
+  "冬の定番の楽しみ方は？",
+  "夏といえばこれを思い出す！",
+  "一番好きなイベント（文化祭・誕生日など）は？",
+  "自分の名前の漢字、気に入ってる？",
+  "今、一番行きたいレストランは？",
+  "一生ひとつの食べ物しか食べられないなら何を選ぶ？",
+  "最近のマイブームを熱く語って！",
+  "100万円自由に使えるなら何に使う？",
+  "好きな家事、嫌いな家事は？",
+  "次の自分の番まで、利き手を使ってはいけない。",
+  "自分を動物に例えると何？",
+  "これまでの人生で最大のピンチは？",
+  "「自分へのご褒美」といえば何？",
+  "学校に新しいルールを1つ作るなら？",
+  "みんなにおすすめしたいものを1つ紹介！",
+  "みんな負けずにクリア！"
+];
+
+let historyList = [];
+
+function rollDice() {
+  const dice = document.getElementById("dice");
+  const topic = document.getElementById("topic");
+  const history = document.getElementById("history");
+
+  dice.classList.remove("rolling");
+  void dice.offsetWidth;
+  dice.classList.add("rolling");
+
+  let count = 0;
+  const timer = setInterval(() => {
+    const temp = Math.floor(Math.random() * 100) + 1;
+    dice.textContent = temp;
+    count++;
+    if (count >= 12) {
+      clearInterval(timer);
+      const num = Math.floor(Math.random() * 100) + 1;
+      dice.textContent = num;
+      topic.textContent = topics[num - 1];
+
+      historyList.unshift(num + "番");
+      if (historyList.length > 8) historyList.pop();
+      history.textContent = "履歴：" + historyList.join(" / ");
+    }
+  }, 45);
+}
+</script>
+</body>
+</html>
